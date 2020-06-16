@@ -1,9 +1,6 @@
-// const db = require("../db/db");
-//
-// console.log(db)
-// const insertToTable = async (data, tableName) => {
-//
-//   await db.schema.hasTable(`${tableName}`).insert(data);
-// };
-//
-// // module.exports = insertToTable;
+
+module.exports = (data) => {
+  return data.sort((prev, next) => {
+    return new Date(prev.date) - new Date(next.date);
+  });
+};

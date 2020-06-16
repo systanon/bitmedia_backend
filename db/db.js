@@ -2,17 +2,20 @@ const knex = require("knex");
 const { Model } = require("objection");
 const fs = require("fs");
 const path = require("path");
-// const  insertToTable = require('../helper/helper')
+const UserServices = require("../services/UsersServices");
+const UsersStatisticServices = require("../services/UsersStatisticServices");
 
 const db = knex({
   client: "mysql2",
   connection: {
     host: "127.0.0.1",
     user: "root",
-    password: "qwerty2020",
-    database: "Bitmedia",
+    password: "root",
+    database: "bitmedia",
   },
 });
+
+Model.knex(db);
 
 const insertToTable = async (data, tableName) => {
   await db(`${tableName}`).insert(data);
@@ -36,13 +39,25 @@ db.schema
     fs.readFile(path.join(__dirname, "./users.json"), "utf-8", (err, data) => {
       if (err) console.error(err);
       const userData = JSON.parse(data);
-      userData.forEach((user) => {
-        const { id, first_name, last_name, email, gender, ip_address } = user;
-        insertToTable(
-          { id, first_name, last_name, email, gender, ip_address },
-          "users"
-        );
-      });
+      (async function () {
+        const users = await UserServices.getUsersFromDatabase();
+        if (users.length === 0) {
+          userData.forEach((user) => {
+            const {
+              id,
+              first_name,
+              last_name,
+              email,
+              gender,
+              ip_address,
+            } = user;
+            insertToTable(
+              { id, first_name, last_name, email, gender, ip_address },
+              "users"
+            );
+          });
+        }
+      })();
     });
   });
 
@@ -66,13 +81,18 @@ db.schema
       (err, data) => {
         if (err) console.error(err);
         const userData = JSON.parse(data);
-        userData.forEach((user) => {
-          const { user_id, date, page_views, clicks } = user;
-          insertToTable(
-            { user_id, date, page_views, clicks },
-            "users_statistic"
-          );
-        });
+        (async function () {
+          const statistics = await UsersStatisticServices.getAllUsersStatistic();
+          if (statistics.length === 0) {
+            userData.forEach((user) => {
+              const { user_id, date, page_views, clicks } = user;
+              insertToTable(
+                { user_id, date, page_views, clicks },
+                "users_statistic"
+              );
+            });
+          }
+        })();
       }
     );
   });
